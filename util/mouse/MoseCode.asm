@@ -83,7 +83,7 @@ clickWaitWithDelayAsync:
 agAsync:	
 	loop agAsync
 
-mov [a], 1000
+mov [variable], 1000
 waitTillPressOnPointAsync:
 
 	mov ax,5h
@@ -119,14 +119,14 @@ waitTillPressOnPointAsync:
 	jmp waitTillAReachesZeroToMouseLeftClickAsync
 
 jumpMouseClickAsyncCheck:
-	dec [a]
-	cmp [a], 0
+	dec [variable]
+	cmp [variable], 0
 	jne waitTillPressOnPointAsync
 	je clickForExitAsync
 	
 waitTillAReachesZeroToMouseLeftClickAsync:
-	dec [a]
-	cmp [a], 0
+	dec [variable]
+	cmp [variable], 0
 	jne waitTillAReachesZeroToMouseLeftClickAsync
 	je @@endProc
 	

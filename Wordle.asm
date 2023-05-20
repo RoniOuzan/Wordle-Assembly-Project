@@ -6,6 +6,8 @@ STACK 0f500h
 MENU_BACKGROUND  equ 'images/menus/Menu.bmp'
 HELP_TEXT equ 'images/menus/HelpText.bmp'
 GAME_LAYOUT equ 'images/menus/Game.bmp'
+WIN_BACKGROUND equ 'images/menus/Win.bmp'
+LOSE_BACKGROUND equ 'images/menus/Lose.bmp'
 
 START_BUTTON equ 'images/buttons/Start.bmp'
 HELP_BUTTON equ 'images/buttons/Help.bmp'
@@ -40,7 +42,9 @@ DATASEG
 
 	fileMenu db MENU_BACKGROUND, 0
 	fileHelpText db HELP_TEXT, 0
-	fileGameLayout db game_LAYOUT, 0
+	fileGameLayout db GAME_LAYOUT, 0
+	fileWin db WIN_BACKGROUND, 0
+	fileLose db LOSE_BACKGROUND, 0
 
 	fileStartButton db START_BUTTON, 0
 	fileHelpButton db HELP_BUTTON, 0
@@ -67,15 +71,7 @@ DATASEG
 
 	answer db 'abcde'
 
-;----------------------------------------------------
-
-	a dw ?
-	b dw ?
-	c dw ?
-	d dw ?
-	e dw ?
-	f dw ?
-	g dw ?
+	variable dw ?
 	
 	 
 CODESEG
@@ -273,7 +269,7 @@ proc enterLine
 	call rewriteLine
 
 	call checkIfWon
-	call checkifLoss
+	call checkifLost
 
 	call resetlineColor
 	inc [currentLine]
@@ -281,15 +277,20 @@ proc enterLine
 	ret
 endp enterLine
 
-proc checkIfLoss
+proc checkIfLost
 	cmp [currentLine], 4
-	jae loss
+	jae lose
 
 	ret
-endp checkIfLoss
+endp checkIfLost
 
-loss:
-	call displayHelp
+lose:
+	mov dx, offset fileLose
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320
+	mov [bmpRowSize], 200
+	call openShowBmp
 
 proc checkIfWon
 	mov bx, 0
@@ -312,7 +313,13 @@ proc checkIfWon
 endp checkIfWon
 
 win:
-	call game
+	mov dx, offset fileWin
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320
+	mov [bmpRowSize], 200
+	call openShowBmp
+
 
 proc checkLineLetters
 	call greenCheck
