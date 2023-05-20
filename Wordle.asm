@@ -8,6 +8,7 @@ HELP_TEXT equ 'images/menus/HelpText.bmp'
 GAME_LAYOUT equ 'images/menus/Game.bmp'
 WIN_BACKGROUND equ 'images/menus/Win.bmp'
 LOSE_BACKGROUND equ 'images/menus/Lose.bmp'
+EXIT_BACKGROUND equ 'images/menus/Exit.bmp'
 
 START_BUTTON equ 'images/buttons/Start.bmp'
 HELP_BUTTON equ 'images/buttons/Help.bmp'
@@ -19,7 +20,6 @@ BMP_WIDTH = 320
  
 
 DATASEG
-
     include 'util/bmp/BmpData.asm'
 	include "util/random/RandData.asm"
 	 
@@ -46,6 +46,7 @@ DATASEG
 	fileGameLayout db GAME_LAYOUT, 0
 	fileWin db WIN_BACKGROUND, 0
 	fileLose db LOSE_BACKGROUND, 0
+	fileExit db EXIT_BACKGROUND, 0
 
 	fileStartButton db START_BUTTON, 0
 	fileHelpButton db HELP_BUTTON, 0
@@ -101,17 +102,8 @@ exit:
 	mov ax,2
 	int 10h
 
-	
 	mov ax, 4c00h
 	int 21h
-	
-
-	
-;==========================
-;==========================
-;===== Procedures  Area ===
-;==========================
-;==========================
 
 proc game
 	call reset
@@ -138,7 +130,6 @@ proc displayBackground
 	mov [bmpColSize], 320
 	mov [bmpRowSize], 200
 	call openShowBmp
-	
 	ret
 endp displayBackground
 
@@ -189,6 +180,16 @@ proc waitForStart
 		cmp [gotClick], 1
 		je helpButtonClicked
 
+		; Exit
+		mov [xClick], 96
+		mov [yClick], 160
+		mov [widthClick], 128
+		mov [heightClick], 32
+		call waitTillGotClickOnSomePointAsync
+		
+		cmp [gotClick], 1
+		je exitButtonClicked
+
 		jmp menuLoop
 	ret
 endp waitForStart
@@ -198,6 +199,17 @@ startButtonClicked:
 
 helpButtonClicked:
 	call DisplayHelp
+
+exitButtonClicked:
+	mov dx, offset fileExit
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320
+	mov [bmpRowSize], 200
+	call openShowBmp
+
+	whileExit:
+		jmp whileExit
 
 goToMenuFromEsc:
 	call game
@@ -218,10 +230,8 @@ proc startGame
 
 		cmp ah, 1 ; if esc: go to menu
 		je goToMenuFromEsc
-
 		cmp ah, 1Ch ; if enter: check if full and enter the line
 		je callEnterLine
-
 		cmp ah, 0Eh ; if backspace: delete one letter
 		je callBackspace
 
@@ -247,9 +257,7 @@ proc convertALToLowerCase
 	jb exitconvertALToLowerCase
 	cmp al, 'Z'
 	ja exitconvertALToLowerCase
-
 	add al, 32
-
 exitconvertALToLowerCase:
 	ret
 endp convertALToLowerCase
@@ -304,7 +312,6 @@ proc checkIfWon
 		jne continueCheckIfWon
 
 		inc cx
-
 		continueCheckIfWon:
 			inc bx
 			cmp bx, 5
@@ -324,13 +331,43 @@ win:
 	mov [bmpRowSize], 200
 	call openShowBmp
 
-
 proc checkLineLetters
 	call greenCheck
 	call yellowCheck
-
 	ret
 endp checkLineLetters
+
+proc greenCheck
+	push ax
+	push bx
+	push cx
+	push si
+
+	mov cx, 0
+	greenCheckLoop:
+		mov [currentWord], cl
+		call getCurrentLetter
+
+		mov si, cx
+		mov al, [answer + si]
+		cmp [bx], al
+		jne letterIsNotGreen
+
+		mov bx, cx
+		mov [lineColor + bx], 'g'
+
+		letterIsNotGreen:
+			inc cx
+			cmp cx, 5
+			jb greenCheckLoop
+	
+	pop si
+	pop cx
+	pop bx
+	pop ax
+
+	ret
+endp greenCheck
 
 proc yellowCheck
 	push ax
@@ -380,38 +417,6 @@ proc yellowCheck
 
 	ret
 endp yellowCheck
-
-proc greenCheck
-	push ax
-	push bx
-	push cx
-	push si
-
-	mov cx, 0
-	greenCheckLoop:
-		mov [currentWord], cl
-		call getCurrentLetter
-
-		mov si, cx
-		mov al, [answer + si]
-		cmp [bx], al
-		jne letterIsNotGreen
-
-		mov bx, cx
-		mov [lineColor + bx], 'g'
-
-		letterIsNotGreen:
-			inc cx
-			cmp cx, 5
-			jb greenCheckLoop
-	
-	pop si
-	pop cx
-	pop bx
-	pop ax
-
-	ret
-endp greenCheck
 
 proc resetlineColor
 	push bx
@@ -481,7 +486,6 @@ proc writeLetter
 	call writeLetterOnScreen
 	call writeLetterInCode
 	call nextLetter
-
 	ret
 endp writeLetter
 
@@ -598,7 +602,4 @@ endp displayHelp
 goToMenuFromHelp:
 	call game
 
- 
 END start
-
-
