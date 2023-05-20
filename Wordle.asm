@@ -19,54 +19,53 @@ BMP_WIDTH = 320
 DATASEG
 
     include 'util/bmp/BmpData.asm'
-    include 'util/mouse/MoseData.asm'
 	 
-	Color db ?
-	Xclick dw ?
-	Yclick dw ?
-	Xp dw ?
-	Yp dw ?
-	SquareSize dw ?
+	color db ?
+	xClick dw ?
+	yClick dw ?
+	xp dw ?
+	yp dw ?
+	squareSize dw ?
 	 
-	BmpLeft dw ?
-	BmpTop dw ?
-	BmpColSize dw ?
-	BmpRowSize dw ?
+	bmpLeft dw ?
+	bmpTop dw ?
+	bmpColSize dw ?
+	bmpRowSize dw ?
 	
-	WidthClick dw ?
-	HeightClick dw ?
-	GotClick db ?
+	widthClick dw ?
+	heightClick dw ?
+	gotClick db ?
 
 ;----------------------------------------------------
 
-	FileMenu db MENU_BACKGROUND, 0
-	FileHelpText db HELP_TEXT, 0
-	FileGameLayout db GAME_LAYOUT, 0
+	fileMenu db MENU_BACKGROUND, 0
+	fileHelpText db HELP_TEXT, 0
+	fileGameLayout db game_LAYOUT, 0
 
-	FileStartButton db START_BUTTON, 0
-	FileHelpButton db HELP_BUTTON, 0
-	FileExitButton db EXIT_BUTTON, 0
+	fileStartButton db START_BUTTON, 0
+	fileHelpButton db HELP_BUTTON, 0
+	fileExitButton db EXIT_BUTTON, 0
 
-	Letter db LETTER_IMAGE
-	LetterToWrite db 'a', '_'
-	LetterColor db 'g.bmp', 0
+	letter db LETTER_IMAGE
+	letterToWrite db 'a', '_'
+	letterColor db 'g.bmp', 0
 
-	LetterEmpty db LETTER_IMAGE, '___.bmp', 0
+	letterEmpty db LETTER_IMAGE, '___.bmp', 0
 
 ;----------------------------------------------------
 
 	currentWord db 0
-	CurrentLine db 0
+	currentLine db 0
 
-	Line0 db 0, 0, 0, 0, 0
-	Line1 db 0, 0, 0, 0, 0
-	Line2 db 0, 0, 0, 0, 0
-	Line3 db 0, 0, 0, 0, 0
-	Line4 db 0, 0, 0, 0, 0
+	line0 db 0, 0, 0, 0, 0
+	line1 db 0, 0, 0, 0, 0
+	line2 db 0, 0, 0, 0, 0
+	line3 db 0, 0, 0, 0, 0
+	line4 db 0, 0, 0, 0, 0
 
-	LineColor db 'w', 'w', 'w', 'w', 'w'
+	lineColor db 'w', 'w', 'w', 'w', 'w'
 
-	Answer db 'abcde'
+	answer db 'abcde'
 
 ;----------------------------------------------------
 
@@ -82,15 +81,15 @@ DATASEG
 CODESEG
  
 	include "util/bmp/BmpCode.asm"
-	include "util/mouse/MoseCode.asm"
+	include "util/mouse/MoseCode.asm" ; It's mose and not mouse because 8 let limit and not because I am stupid
  
 start:
 	mov ax, @data
 	mov ds, ax
 	
-	call SetGraphic
+	call setGraphic
  
-	call Game
+	call game
 	
 		
 exit:
@@ -116,213 +115,213 @@ exit:
 ;==========================
 ;==========================
 
-proc Game
-	call Reset
+proc game
+	call reset
 
-	call DisplayBackground
-	call DisplayButtons
+	call displayBackground
+	call displayButtons
 
-	call WaitForStart
+	call waitForStart
 
 	ret
-endp Game
+endp game
 
-proc Reset
-	mov [CurrentLine], 0
+proc reset
+	mov [currentLine], 0
 	mov [currentWord], 0
-	call ResetLineColor
+	call resetlineColor
 	ret
-endp Reset
+endp reset
 
-proc DisplayBackground
-	mov dx, offset FileMenu
-	mov [BmpLeft],0
-	mov [BmpTop],0
-	mov [BmpColSize], 320
-	mov [BmpRowSize], 200
-	call OpenShowBmp
+proc displayBackground
+	mov dx, offset fileMenu
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320
+	mov [bmpRowSize], 200
+	call openShowBmp
 	
 	ret
-endp DisplayBackground
+endp displayBackground
 
-proc DisplayButtons
-	mov dx, offset FileStartButton
-	mov [BmpLeft],96
-	mov [BmpTop],80
-	mov [BmpColSize], 128
-	mov [BmpRowSize], 32
-	call OpenShowBmp
+proc displayButtons
+	mov dx, offset fileStartButton
+	mov [bmpLeft],96
+	mov [bmpTop],80
+	mov [bmpColSize], 128
+	mov [bmpRowSize], 32
+	call openShowBmp
 
-	mov dx, offset FileHelpButton
-	mov [BmpLeft],96
-	mov [BmpTop],120
-	mov [BmpColSize], 128
-	mov [BmpRowSize], 32
-	call OpenShowBmp
+	mov dx, offset fileHelpButton
+	mov [bmpLeft],96
+	mov [bmpTop],120
+	mov [bmpColSize], 128
+	mov [bmpRowSize], 32
+	call openShowBmp
 
-	mov dx, offset FileExitButton
-	mov [BmpLeft],96
-	mov [BmpTop],160
-	mov [BmpColSize], 128
-	mov [BmpRowSize], 32
-	call OpenShowBmp
+	mov dx, offset fileExitButton
+	mov [bmpLeft],96
+	mov [bmpTop],160
+	mov [bmpColSize], 128
+	mov [bmpRowSize], 32
+	call openShowBmp
 
 	ret
-endp DisplayButtons
+endp displayButtons
 
-proc WaitForStart
-	MenuLoop:
+proc waitForStart
+	menuLoop:
 		; Start
-		mov [Xclick], 96
-		mov [Yclick], 80
-		mov [WidthClick], 128
-		mov [HeightClick], 32
-		call WaitTillGotClickOnSomePointAsync
+		mov [xClick], 96
+		mov [yClick], 80
+		mov [widthClick], 128
+		mov [heightClick], 32
+		call waitTillGotClickOnSomePointAsync
 		
 		cmp [GotClick], 1
-		je StartButtonClicked
+		je startButtonClicked
 		
 		; Help
-		mov [Xclick], 96
-		mov [Yclick], 120
-		mov [WidthClick], 128
-		mov [HeightClick], 32
-		call WaitTillGotClickOnSomePointAsync
+		mov [xClick], 96
+		mov [yClick], 120
+		mov [widthClick], 128
+		mov [heightClick], 32
+		call waitTillGotClickOnSomePointAsync
 		
-		cmp [GotClick], 1
-		je HelpButtonClicked
+		cmp [gotClick], 1
+		je helpButtonClicked
 
-		jmp MenuLoop
+		jmp menuLoop
 	ret
-endp WaitForStart
+endp waitForStart
 
-StartButtonClicked:
-	call StartGame
+startButtonClicked:
+	call startGame
 
-HelpButtonClicked:
+helpButtonClicked:
 	call DisplayHelp
 
-GoToMenuFromEsc:
-	call Game
+goToMenuFromEsc:
+	call game
 
-proc StartGame
-	mov dx, offset FileGameLayout
-	mov [BmpLeft],0
-	mov [BmpTop],0
-	mov [BmpColSize], 320
-	mov [BmpRowSize], 200
-	call OpenShowBmp
+proc startGame
+	mov dx, offset fileGameLayout
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320
+	mov [bmpRowSize], 200
+	call openShowBmp
 
-	GameLoop:
+	gameLoop:
 		mov ah, 0h ; Reads input from keyboard
 		int 16h
 
 		cmp ah, 1 ; if esc: go to menu
-		je GoToMenuFromEsc
+		je goToMenuFromEsc
 
 		cmp ah, 1Ch ; if enter: check if full and enter the line
-		je CallEnterLine
+		je callEnterLine
 
 		cmp ah, 0Eh ; if backspace: delete one letter
-		je CallBackspace
+		je callBackspace
 
 		cmp [currentWord], 4 ; if the line is full: don't delete
-		ja GameLoop
+		ja gameLoop
 
-		call ConvertALToUpperCase ; converts to upper case
+		call convertALToUpperCase ; converts to upper case
 
 		cmp al, 'a' ; if key is not a letter: wait for the next type
-		jb GameLoop
+		jb gameLoop
 		cmp al, 'z'
-		ja GameLoop
+		ja gameLoop
 
-		call WriteLetter ; if the key is letter: write it on the screen
+		call writeLetter ; if the key is letter: write it on the screen
 	
-		jmp GameLoop
+		jmp gameLoop
 
 	ret
-endp StartGame
+endp startGame
 
-proc ConvertALToUpperCase
+proc convertALToUpperCase
 	cmp al, 'A'
-	jb ExitConvertALToUpperCase
+	jb exitConvertALToUpperCase
 	cmp al, 'Z'
-	ja ExitConvertALToUpperCase
+	ja exitConvertALToUpperCase
 
 	add al, 32
 
-ExitConvertALToUpperCase:
+exitConvertALToUpperCase:
 	ret
-endp ConvertALToUpperCase
+endp convertALToUpperCase
 
-CallBackspace:
+callBackspace:
 	cmp [currentWord], 0
-	jbe GameLoop
+	jbe gameLoop
 
-	call Backspace
-	jmp GameLoop
+	call backspace
+	jmp gameLoop
 
-CallEnterLine:
+callEnterLine:
 	cmp [currentWord], 5
-	jb GameLoop
+	jb gameLoop
 
-	call EnterLine
-	jmp GameLoop
+	call enterLine
+	jmp gameLoop
 
-proc EnterLine
-	call CheckLineLetters
-	call RewriteLine
+proc enterLine
+	call checkLineLetters
+	call rewriteLine
 
-	call CheckIfWon
-	call CheckifLoss
+	call checkIfWon
+	call checkifLoss
 
-	call ResetLineColor
-	inc [CurrentLine]
+	call resetlineColor
+	inc [currentLine]
 	mov [currentWord], 0
 	ret
-endp EnterLine
+endp enterLine
 
-proc CheckIfLoss
-	cmp [CurrentLine], 4
-	jae Loss
+proc checkIfLoss
+	cmp [currentLine], 4
+	jae loss
 
 	ret
-endp CheckIfLoss
+endp checkIfLoss
 
-Loss:
-	call DisplayHelp
+loss:
+	call displayHelp
 
-proc CheckIfWon
+proc checkIfWon
 	mov bx, 0
 	mov cx, 0
-	CheckIfWonLoop:
-		cmp [LineColor + bx], 'g'
-		jne ContinueCheckIfWon
+	checkIfWonLoop:
+		cmp [lineColor + bx], 'g'
+		jne continueCheckIfWon
 
 		inc cx
 
-		ContinueCheckIfWon:
+		continueCheckIfWon:
 			inc bx
 			cmp bx, 5
-			jb CheckIfWonLoop
+			jb checkIfWonLoop
 	
 	cmp cx, 5
-	je Win
+	je win
 
 	ret
-endp CheckIfWon
+endp checkIfWon
 
-Win:
-	call Game
+win:
+	call game
 
-proc CheckLineLetters
-	call GreenCheck
-	call YellowCheck
+proc checkLineLetters
+	call greenCheck
+	call yellowCheck
 
 	ret
-endp CheckLineLetters
+endp checkLineLetters
 
-proc YellowCheck
+proc yellowCheck
 	push ax
 	push bx
 	push cx
@@ -330,37 +329,37 @@ proc YellowCheck
 	push si
 
 	mov cx, 0
-	YellowCheckLoop:
+	yellowCheckLoop:
 		mov bx, cx
-		cmp [LineColor + bx], 'g'
-		je YellowCheckNextLetter
+		cmp [lineColor + bx], 'g'
+		je yellowCheckNextLetter
 
 		mov [currentWord], cl
-		call GetCurrentLetter
+		call getCurrentLetter
 
 		mov dx, 0
-		YellowAnswerCheckLoop:
+		yellowAnswerCheckLoop:
 			mov si, dx
-			mov al, [Answer + si]
-			cmp [LineColor + si], 'g'
-			je ContinueYellowAnswerCheck
+			mov al, [answer + si]
+			cmp [lineColor + si], 'g'
+			je continueYellowAnswerCheck
 			cmp [bx], al
-			je PutYellow
+			je putYellow
 
-			ContinueYellowAnswerCheck:
+			continueYellowAnswerCheck:
 				inc dx
 				cmp dx, 5
-				jb YellowAnswerCheckLoop
-				jae YellowCheckNextLetter
+				jb yellowAnswerCheckLoop
+				jae yellowCheckNextLetter
 		
-		PutYellow:
+		putYellow:
 			mov bx, cx
-			mov [LineColor + bx], 'y'
+			mov [lineColor + bx], 'y'
 
-		YellowCheckNextLetter:
+		yellowCheckNextLetter:
 			inc cx
 			cmp cx, 5
-			jb YellowCheckLoop
+			jb yellowCheckLoop
 
 	pop si
 	pop dx
@@ -369,31 +368,31 @@ proc YellowCheck
 	pop ax	
 
 	ret
-endp YellowCheck
+endp yellowCheck
 
-proc GreenCheck
+proc greenCheck
 	push ax
 	push bx
 	push cx
 	push si
 
 	mov cx, 0
-	GreenCheckLoop:
+	greenCheckLoop:
 		mov [currentWord], cl
-		call GetCurrentLetter
+		call getCurrentLetter
 
 		mov si, cx
-		mov al, [Answer + si]
+		mov al, [answer + si]
 		cmp [bx], al
-		jne LetterIsNotGreen
+		jne letterIsNotGreen
 
 		mov bx, cx
-		mov [LineColor + bx], 'g'
+		mov [lineColor + bx], 'g'
 
-		LetterIsNotGreen:
+		letterIsNotGreen:
 			inc cx
 			cmp cx, 5
-			jb GreenCheckLoop
+			jb greenCheckLoop
 	
 	pop si
 	pop cx
@@ -401,26 +400,26 @@ proc GreenCheck
 	pop ax
 
 	ret
-endp GreenCheck
+endp greenCheck
 
-proc ResetLineColor
+proc resetlineColor
 	push bx
 	push cx
 
 	mov cx, 5
-	ResetLineColorLoop:
+	resetlineColorLoop:
 		mov bx, cx
 		dec bx
 		mov [lineColor + bx], 'w'
-		loop ResetLineColorLoop
+		loop resetlineColorLoop
 	
 	pop cx
 	pop bx
 
 	ret
-endp ResetLineColor
+endp resetlineColor
 
-proc RewriteLine
+proc rewriteLine
 	push ax
 	push bx
 	push cx
@@ -428,19 +427,19 @@ proc RewriteLine
 
 	mov bx, 0
 	mov [currentWord], 0
-	RewriteLineLoop:
-		mov dl, [LineColor + bx]
+	rewriteLineLoop:
+		mov dl, [lineColor + bx]
 		mov dh, 0
 		mov cx, bx
-		call GetCurrentLetter
+		call getCurrentLetter
 		mov al, [bx]
 		mov bx, cx
-		call WriteLetterOnScreen
+		call writeLetterOnScreen
 
 		inc bx
-		inc [CurrentWord]
+		inc [currentWord]
 		cmp bx, 5
-		jb RewriteLineLoop
+		jb rewriteLineLoop
 	
 	pop dx
 	pop cx
@@ -448,9 +447,9 @@ proc RewriteLine
 	pop ax
 
 	ret
-endp RewriteLine
+endp rewriteLine
 
-proc Backspace
+proc backspace
 	push bx
 
 	dec [currentWord]
@@ -458,46 +457,46 @@ proc Backspace
 	mov bh, 0
 	mov [byte line0 + bx], 0
 
-	mov dx, offset LetterEmpty
-	call DisplayDXOnNode
+	mov dx, offset letterEmpty
+	call displayDXOnNode
 
 	pop bx
 
 	ret
-endp Backspace
+endp backspace
 
 
-proc WriteLetter
-	call WriteLetterOnScreen
-	call WriteLetterInCode
-	call NextLetter
+proc writeLetter
+	call writeLetterOnScreen
+	call writeLetterInCode
+	call nextLetter
 
 	ret
-endp WriteLetter
+endp writeLetter
 
 
-proc WriteLetterOnScreen
+proc writeLetterOnScreen
 	push bx
 	push cx
 	push dx
 
-	mov [LetterToWrite], al
+	mov [letterToWrite], al
 	mov bl, [currentWord]
 	mov bh, 0
-	mov cl, [LineColor + bx]
-	mov [LetterColor], cl
+	mov cl, [lineColor + bx]
+	mov [letterColor], cl
 
 	mov dx, offset Letter
-	call DisplayDXOnNode
+	call displayDXOnNode
 
 	pop dx
 	pop cx
 	pop bx
 
 	ret
-endp WriteLetterOnScreen
+endp writeLetterOnScreen
 
-proc DisplayDXOnNode
+proc displayDXOnNode
 	push ax
 	push bx
 	push dx
@@ -506,44 +505,44 @@ proc DisplayDXOnNode
 	mov bl, 36
 	mul bl
 	add ax, 16
-	mov [BmpLeft], ax
+	mov [bmpLeft], ax
 
-	mov al, [CurrentLine]
+	mov al, [currentLine]
 	mov bl, 38
 	mul bl
 	add ax, 8
 
-	mov [BmpTop], ax
-	mov [BmpColSize], 32
-	mov [BmpRowSize], 32
-	call OpenShowBmp
+	mov [bmpTop], ax
+	mov [bmpColSize], 32
+	mov [bmpRowSize], 32
+	call openShowBmp
 
 	pop dx
 	pop bx
 	pop ax
 
 	ret
-endp DisplayDXOnNode
+endp displayDXOnNode
 
-proc WriteLetterInCode
+proc writeLetterInCode
 	push bx
 	push cx
 
-	call GetCurrentLetter
+	call getCurrentLetter
 	mov [bx], al
 
 	pop cx
 	pop bx
 
 	ret
-endp WriteLetterInCode
+endp writeLetterInCode
 
-proc GetCurrentLetter
+proc getCurrentLetter
 	push ax
 
 	mov bl, [currentWord]
 	mov bh, 0
-	mov al, [CurrentLine]
+	mov al, [currentLine]
 	mov ah, 5
 	mul ah
 	add bx, ax
@@ -552,43 +551,41 @@ proc GetCurrentLetter
 	pop ax
 
 	ret
-endp GetCurrentLetter
+endp getCurrentLetter
 
-proc NextLetter
+proc nextLetter
 	inc [currentWord]
 	ret
-endp NextLetter
+endp nextLetter
 
+proc displayHelp
+	mov dx, offset fileHelpText
+	mov [bmpLeft],0
+	mov [bmpTop],0
+	mov [bmpColSize], 320	
+	mov [bmpRowSize], 200
+	call openShowBmp
 
+	mov dx, offset fileExitButton
+	mov [bmpLeft],96
+	mov [bmpTop],164
+	mov [bmpColSize], 128
+	mov [bmpRowSize], 32
+	call openShowBmp
 
-proc DisplayHelp
-	mov dx, offset FileHelpText
-	mov [BmpLeft],0
-	mov [BmpTop],0
-	mov [BmpColSize], 320	
-	mov [BmpRowSize], 200
-	call OpenShowBmp
-
-	mov dx, offset FileExitButton
-	mov [BmpLeft],96
-	mov [BmpTop],164
-	mov [BmpColSize], 128
-	mov [BmpRowSize], 32
-	call OpenShowBmp
-
-	mov [Xclick], 96
-	mov [Yclick], 164
-	mov [WidthClick], 128
-	mov [HeightClick], 32
-	call WaitTillGotClickOnSomePoint
-	cmp [GotClick], 1
-	je GoToMenuFromHelp
+	mov [xClick], 96
+	mov [yClick], 164
+	mov [widthClick], 128
+	mov [heightClick], 32
+	call waitTillGotClickOnSomePoint
+	cmp [gotClick], 1
+	je goToMenuFromHelp
 
 	ret
-endp DisplayHelp
+endp displayHelp
 
-GoToMenuFromHelp:
-	call Game
+goToMenuFromHelp:
+	call game
 
  
 END start

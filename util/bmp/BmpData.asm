@@ -1,13 +1,13 @@
-ScrLine 	db BMP_WIDTH dup (0)  ; One Color line read buffer
+scrLine 	db BMP_WIDTH dup (0)  ; One Color line read buffer
  
-FileHandle	dw ?
-Header 	    db 54 dup(0)
-Palette 	db 400h dup (0)
+fileHandle	dw ?
+header 	    db 54 dup(0)
+palette 	db 400h dup (0)
 
-SmallPicName db 'Pic48X78.bmp',0
+smallPicName db 'Pic48X78.bmp',0
 
 
-BmpFileErrorMsg    	db 'Error At Opening Bmp File', 0dh, 0ah,'$'
-ErrorFile           db 0
+bmpFileErrorMsg    	db 'Error At Opening Bmp File', 0dh, 0ah,'$'
+errorFile           db 0
 BB db "BB..",'$'
 ; array for mouse int 33 ax=09 (not a must) 64 bytes

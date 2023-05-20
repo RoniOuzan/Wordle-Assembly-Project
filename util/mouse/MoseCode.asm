@@ -1,5 +1,5 @@
 ; Sync wait for mouse click
-proc WaitTillGotClickOnSomePoint
+proc waitTillgotClickOnSomePoint
 	push si
 	push ax
 	push bx
@@ -10,11 +10,11 @@ proc WaitTillGotClickOnSomePoint
 	int 33h
 	
 	
-ClickWaitWithDelay:
+clickWaitWithDelay:
 	mov cx,1000
 ag:	
 	loop ag
-WaitTillPressOnPoint:
+waitTillPressOnPoint:
 
 	mov ax,5h
 	mov bx,0 ; quary the left b
@@ -22,37 +22,37 @@ WaitTillPressOnPoint:
 	
 	
 	cmp bx,00h
-	jna ClickWaitWithDelay  ; mouse wasn't pressed
+	jna clickWaitWithDelay  ; mouse wasn't pressed
 	and ax,0001h
-	jz ClickWaitWithDelay   ; left wasn't pressed
+	jz clickWaitWithDelay   ; left wasn't pressed
 
  	
 	shr cx,1
 	cmp cx,250
-	ja ClickForExit
+	ja clickForExit
 	mov si, cx 
-	add si, [WidthClick]
-	cmp si , [Xclick]
-	jl WaitTillPressOnPoint
+	add si, [widthClick]
+	cmp si , [xClick]
+	jl waitTillPressOnPoint
 	mov si, cx 
 	sub si, [WidthClick]
-	cmp si , [Xclick]
-	jg WaitTillPressOnPoint
+	cmp si , [xClick]
+	jg waitTillPressOnPoint
 	
 	
 	mov si, dx 
-	add si, [HeightClick]
-	cmp si , [Yclick]
-	jl WaitTillPressOnPoint
+	add si, [heightClick]
+	cmp si , [yClick]
+	jl waitTillPressOnPoint
 	mov si, dx 
-	sub si, [HeightClick]
-	cmp si , [Yclick]
-	jg WaitTillPressOnPoint
-	mov [GotClick],1
-	jmp @@EndProc
-ClickForExit:	
-	mov [GotClick],0
-@@EndProc:
+	sub si, [heightClick]
+	cmp si , [yClick]
+	jg waitTillPressOnPoint
+	mov [gotClick],1
+	jmp @@endProc
+clickForExit:	
+	mov [gotClick],0
+@@endProc:
 	mov ax,2
 	int 33h
 	
@@ -62,29 +62,29 @@ ClickForExit:
 	pop ax
 	pop si
 	ret
-endp WaitTillGotClickOnSomePoint
+endp waitTillgotClickOnSomePoint
 
 ;--------------------------------Async-------------------------------------------
 
 ; Async wait for mouse click
-proc WaitTillGotClickOnSomePointAsync
+proc waitTillgotClickOnSomePointAsync
 	push si
 	push ax
 	push bx
 	push cx
 	push dx
-	mov [GotClick], 0
+	mov [gotClick], 0
 	
 	mov ax,1
 	int 33h
 	
-ClickWaitWithDelayAsync:
+clickWaitWithDelayAsync:
 	mov cx,1000
 agAsync:	
 	loop agAsync
 
 mov [a], 1000
-WaitTillPressOnPointAsync:
+waitTillPressOnPointAsync:
 
 	mov ax,5h
 	mov bx,0 ; quary the left b
@@ -92,47 +92,47 @@ WaitTillPressOnPointAsync:
 	
 	
 	cmp bx,00h
-	jna @@EndProc  ; mouse wasn't pressed
+	jna @@endProc  ; mouse wasn't pressed
 	and ax,0001h
-	jz @@EndProc   ; left wasn't pressed
+	jz @@endProc   ; left wasn't pressed
 
  	
 	shr cx,1
 	cmp cx,250
-	ja ClickForExit
+	ja clickForExit
 	
-	mov si, [Xclick]
+	mov si, [xClick]
 	add si, [WidthClick]
 	cmp cx, si
-	ja JumpMouseClickAsyncCheck
-	cmp cx, [Xclick]
-	jb JumpMouseClickAsyncCheck
+	ja jumpMouseClickAsyncCheck
+	cmp cx, [xClick]
+	jb jumpMouseClickAsyncCheck
 	
-	mov si, [Yclick]
-	add si, [HeightClick]
+	mov si, [yClick]
+	add si, [heightClick]
 	cmp dx, si
-	ja JumpMouseClickAsyncCheck
-	cmp dx, [Yclick]
-	jb JumpMouseClickAsyncCheck
+	ja jumpMouseClickAsyncCheck
+	cmp dx, [yClick]
+	jb jumpMouseClickAsyncCheck
 	
-	mov [GotClick],1
-	jmp WaitTillAReachesZeroToMouseLeftClickAsync
+	mov [gotClick],1
+	jmp waitTillAReachesZeroToMouseLeftClickAsync
 
-JumpMouseClickAsyncCheck:
+jumpMouseClickAsyncCheck:
 	dec [a]
 	cmp [a], 0
-	jne WaitTillPressOnPointAsync
-	je ClickForExitAsync
+	jne waitTillPressOnPointAsync
+	je clickForExitAsync
 	
-WaitTillAReachesZeroToMouseLeftClickAsync:
+waitTillAReachesZeroToMouseLeftClickAsync:
 	dec [a]
 	cmp [a], 0
-	jne WaitTillAReachesZeroToMouseLeftClickAsync
-	je @@EndProc
+	jne waitTillAReachesZeroToMouseLeftClickAsync
+	je @@endProc
 	
-ClickForExitAsync:	
-	mov [GotClick],0
-@@EndProc:
+clickForExitAsync:	
+	mov [gotClick],0
+@@endProc:
 	mov ax,2
 	int 33h
 	
@@ -142,4 +142,4 @@ ClickForExitAsync:
 	pop ax
 	pop si
 	ret
-endp WaitTillGotClickOnSomePointAsync
+endp waitTillgotClickOnSomePointAsync

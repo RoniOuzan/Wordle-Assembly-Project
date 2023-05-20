@@ -1,108 +1,93 @@
-proc OpenShowBmp near
+proc openShowBmp near
 	
 	 
-	call OpenBmpFile
-	cmp [ErrorFile],1
-	je @@ExitProc
+	call openBmpFile
+	cmp [errorFile],1
+	je @@exitProc
 	
-	call ReadBmpHeader
+	call readBmpHeader
 	
-	call ReadBmpPalette
+	call readBmpPalette
 	
-	call CopyBmpPalette
+	call copyBmpPalette
 	
-	call ShowBMP
+	call showBMP
 	
 	 
-	call CloseBmpFile
+	call closeBmpFile
 
-@@ExitProc:
+@@exitProc:
 	ret
-endp OpenShowBmp
-
- 
- 
+endp openShowBmp
 	
 ; input dx filename to open
-proc OpenBmpFile	near						 
+proc openBmpFile near						 
 	mov ah, 3Dh
 	xor al, al
 	int 21h
-	jc @@ErrorAtOpen
-	mov [FileHandle], ax
-	jmp @@ExitProc
+	jc @@errorAtOpen
+	mov [fileHandle], ax
+	jmp @@exitProc
 	
-@@ErrorAtOpen:
-	mov [ErrorFile],1
-@@ExitProc:	
+@@errorAtOpen:
+	mov [errorFile],1
+@@exitProc:	
 	ret
-endp OpenBmpFile
- 
- 
- 
+endp openBmpFile
 
-
-
-proc CloseBmpFile near
+proc closeBmpFile near
 	mov ah,3Eh
-	mov bx, [FileHandle]
+	mov bx, [fileHandle]
 	int 21h
 	ret
-endp CloseBmpFile
-
-
-
+endp closeBmpFile
 
 ; Read 54 bytes the Header
-proc ReadBmpHeader	near					
+proc readBmpHeader	near					
 	push cx
 	push dx
 	
 	mov ah,3fh
-	mov bx, [FileHandle]
+	mov bx, [fileHandle]
 	mov cx,54
-	mov dx,offset Header
+	mov dx, offset header
 	int 21h
 	
 	pop dx
 	pop cx
 	ret
-endp ReadBmpHeader
+endp readBmpHeader
 
-
-
-proc ReadBmpPalette near ; Read BMP file color palette, 256 colors * 4 bytes (400h)
+proc readBmpPalette near ; Read BMP file color palette, 256 colors * 4 bytes (400h)
 						 ; 4 bytes for each color BGR + null)			
 	push cx
 	push dx
 	
 	mov ah,3fh
 	mov cx,400h
-	mov dx,offset Palette
+	mov dx,offset palette
 	int 21h
 	
 	pop dx
 	pop cx
 	
 	ret
-endp ReadBmpPalette
-
+endp readBmpPalette
 
 ; Will move out to screen memory the colors
 ; video ports are 3C8h for number of first color
 ; and 3C9h for all rest
-proc CopyBmpPalette		near					
-										
+proc copyBmpPalette	near														
 	push cx
 	push dx
 	
-	mov si,offset Palette
+	mov si,offset palette
 	mov cx,256
 	mov dx,3C8h
 	mov al,0  ; black first							
 	out dx,al ;3C8h
 	inc dx	  ;3C9h
-CopyNextColor:
+copyNextColor:
 	mov al,[si+2] 		; Red				
 	shr al,2 			; divide by 4 Max (cos max is 63 and we have here max 255 ) (loosing color resolution).				
 	out dx,al 						
@@ -114,23 +99,20 @@ CopyNextColor:
 	out dx,al 							
 	add si,4 			; Point to next color.  (4 bytes for each color BGR + null)				
 								
-	loop CopyNextColor
+	loop copyNextColor
 	
 	pop dx
 	pop cx
 	
 	ret
-endp CopyBmpPalette
+endp copyBmpPalette
 
-
- 
- 
-proc DrawHorizontalLine	near
+proc drawHorizontalLine	near
 	push si
 	push cx
-DrawLine:
+drawLine:
 	cmp si,0
-	jz ExitDrawLine	
+	jz exitDrawLine	
 	 
     mov ah,0ch	
 	int 10h    ; put pixel
@@ -138,114 +120,99 @@ DrawLine:
 	
 	inc cx
 	dec si
-	jmp DrawLine
+	jmp drawLine
 	
 	
-ExitDrawLine:
+exitDrawLine:
 	pop cx
     pop si
 	ret
-endp DrawHorizontalLine
+endp drawHorizontalLine
 
-
-
-proc DrawVerticalLine	near
+proc drawVerticalLine near
 	push si
 	push dx
  
-DrawVertical:
+drawVertical:
 	cmp si,0
-	jz @@ExitDrawLine	
+	jz @@exitDrawLine	
 	 
     mov ah,0ch	
 	int 10h    ; put pixel
 	
-	 
-	
 	inc dx
 	dec si
-	jmp DrawVertical
+	jmp drawVertical
 	
-	
-@@ExitDrawLine:
+@@exitDrawLine:
 	pop dx
     pop si
 	ret
-endp DrawVerticalLine
-
-
+endp drawVerticalLine
 
 ; cx = col dx= row al = color si = height di = width 
-proc Rect
+proc rect
 	push cx
 	push di
-NextVerticalLine:	
+nextVerticalLine:	
 	
 	cmp di,0
-	jz @@EndRect
+	jz @@endRect
 	
 	cmp si,0
-	jz @@EndRect
-	call DrawVerticalLine
+	jz @@endRect
+	call drawVerticalLine
 	inc cx
 	dec di
-	jmp NextVerticalLine
+	jmp nextVerticalLine
 	
 	
-@@EndRect:
+@@endRect:
 	pop di
 	pop cx
 	ret
-endp Rect
+endp rect
 
-
-
-proc DrawSquare
+proc drawSquare
 	push si
 	push ax
 	push cx
 	push dx
 	
-	mov al,[Color]
-	mov si,[SquareSize]  ; line Length
- 	mov cx,[Xp]
-	mov dx,[Yp]
-	call DrawHorizontalLine
+	mov al,[color]
+	mov si,[squareSize]  ; line Length
+ 	mov cx,[xp]
+	mov dx,[yp]
+	call drawHorizontalLine
 
-	 
-	
-	call DrawVerticalLine
-	 
+	call drawVerticalLine	 
 	
 	add dx ,si
 	dec dx
-	call DrawHorizontalLine
-	 
-	
+	call drawHorizontalLine
 	
 	sub  dx ,si
 	inc dx
 	add cx,si
 	dec cx
-	call DrawVerticalLine
+	call drawVerticalLine
 	
-	
-	 pop dx
-	 pop cx
-	 pop ax
-	 pop si
+	pop dx
+	pop cx
+	pop ax
+	pop si
 	 
 	ret
-endp DrawSquare
+endp drawSquare
    
-proc SetGraphic
+proc setGraphic
 	mov ax,13h   ; 320 X 200 
 				 ;Mode 13h is an IBM VGA BIOS mode. It is the specific standard 256-color mode 
 	int 10h
 	ret
-endp SetGraphic
+endp setGraphic
 
-proc ShowBMP 
+proc showBMP 
 ; BMP graphics are saved upside-down.
 ; Read the graphic line by line (BmpRowSize lines in VGA format),
 ; displaying the lines from bottom to top.
@@ -254,10 +221,9 @@ proc ShowBMP
 	mov ax, 0A000h
 	mov es, ax
 	
-	mov cx,[BmpRowSize]
+	mov cx,[bmpRowSize]
 	
- 
-	mov ax,[BmpColSize] ; row size must dived by 4 so if it less we must calculate the extra padding bytes
+	mov ax,[bmpColSize] ; row size must dived by 4 so if it less we must calculate the extra padding bytes
 	xor dx,dx
 	mov si,4
 	div si
@@ -268,14 +234,14 @@ proc ShowBMP
 	sub bp,dx
 
 @@row_ok:	
-	mov dx,[BmpLeft]
+	mov dx,[bmpLeft]
 	
-@@NextLine:
+@@nextLine:
 	push cx
 	push dx
 	
 	mov di,cx  ; Current Row at the small bmp (each time -1)
-	add di,[BmpTop] ; add the Y on entire screen
+	add di,[bmpTop] ; add the Y on entire screen
 	
  
 	; next 5 lines  di will be  = cx*320 + dx , point to the correct screen line
@@ -288,22 +254,22 @@ proc ShowBMP
 	 
 	; small Read one line
 	mov ah,3fh
-	mov cx,[BmpColSize]  
+	mov cx,[bmpColSize]  
 	add cx,bp  ; extra  bytes to each row must be divided by 4
-	mov dx,offset ScrLine
+	mov dx,offset scrLine
 	int 21h
 	; Copy one line into video memory
 	cld ; Clear direction flag, for movsb
-	mov cx,[BmpColSize]  
-	mov si,offset ScrLine
+	mov cx,[bmpColSize]  
+	mov si,offset scrLine
 	rep movsb ; Copy line to the screen
 	
 	pop dx
 	pop cx
 	 
-	loop @@NextLine
+	loop @@nextLine
 	
 	pop cx
 	ret
-endp ShowBMP 
+endp showBMP 
 
