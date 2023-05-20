@@ -21,6 +21,7 @@ BMP_WIDTH = 320
 DATASEG
 
     include 'util/bmp/BmpData.asm'
+	include "util/random/RandData.asm"
 	 
 	color db ?
 	xClick dw ?
@@ -78,6 +79,7 @@ CODESEG
  
 	include "util/bmp/BmpCode.asm"
 	include "util/mouse/MoseCode.asm" ; It's mose and not mouse because 8 let limit and not because I am stupid
+	include "util/random/RandCode.asm"
  
 start:
 	mov ax, @data
@@ -208,6 +210,8 @@ proc startGame
 	mov [bmpRowSize], 200
 	call openShowBmp
 
+	call generateRandomWord
+
 	gameLoop:
 		mov ah, 0h ; Reads input from keyboard
 		int 16h
@@ -224,7 +228,7 @@ proc startGame
 		cmp [currentWord], 4 ; if the line is full: don't delete
 		ja gameLoop
 
-		call convertALToUpperCase ; converts to upper case
+		call convertALToLowerCase ; converts to lower case
 
 		cmp al, 'a' ; if key is not a letter: wait for the next type
 		jb gameLoop
@@ -238,17 +242,17 @@ proc startGame
 	ret
 endp startGame
 
-proc convertALToUpperCase
+proc convertALToLowerCase
 	cmp al, 'A'
-	jb exitConvertALToUpperCase
+	jb exitconvertALToLowerCase
 	cmp al, 'Z'
-	ja exitConvertALToUpperCase
+	ja exitconvertALToLowerCase
 
 	add al, 32
 
-exitConvertALToUpperCase:
+exitconvertALToLowerCase:
 	ret
-endp convertALToUpperCase
+endp convertALToLowerCase
 
 callBackspace:
 	cmp [currentWord], 0
