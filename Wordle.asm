@@ -19,7 +19,7 @@ BMP_WIDTH = 320
 DATASEG
 
     include 'util/bmp/BmpData.asm'
-    include 'util/mouse/MouseData.asm'
+    include 'util/mouse/MoseData.asm'
 	 
 	Color db ?
 	Xclick dw ?
@@ -51,7 +51,7 @@ DATASEG
 	LetterToWrite db 'a', '_'
 	LetterColor db 'g.bmp', 0
 
-	LetterEmpty db LETTER_IMAGE, '__.bmp', 0
+	LetterEmpty db LETTER_IMAGE, '___.bmp', 0
 
 ;----------------------------------------------------
 
@@ -63,6 +63,10 @@ DATASEG
 	Line2 db 0, 0, 0, 0, 0
 	Line3 db 0, 0, 0, 0, 0
 	Line4 db 0, 0, 0, 0, 0
+
+	LineColor db 'w', 'w', 'w', 'w', 'w'
+
+	Answer db 'abcde'
 
 ;----------------------------------------------------
 
@@ -78,7 +82,7 @@ DATASEG
 CODESEG
  
 	include "util/bmp/BmpCode.asm"
-	include "util/mouse/MouseCode.asm"
+	include "util/mouse/MoseCode.asm"
  
 start:
 	mov ax, @data
@@ -126,6 +130,7 @@ endp Game
 proc Reset
 	mov [CurrentLine], 0
 	mov [currentWord], 0
+	call ResetLineColor
 	ret
 endp Reset
 
@@ -197,7 +202,8 @@ StartButtonClicked:
 HelpButtonClicked:
 	call DisplayHelp
 
-
+GoToMenuFromEsc:
+	call Game
 
 proc StartGame
 	mov dx, offset FileGameLayout
@@ -212,10 +218,16 @@ proc StartGame
 		int 16h
 
 		cmp ah, 1 ; if esc: go to menu
-		je GoToMenu
+		je GoToMenuFromEsc
 
-		cmp ah, 0Eh
+		cmp ah, 1Ch ; if enter: check if full and enter the line
+		je CallEnterLine
+
+		cmp ah, 0Eh ; if backspace: delete one letter
 		je CallBackspace
+
+		cmp [currentWord], 4 ; if the line is full: don't delete
+		ja GameLoop
 
 		call ConvertALToUpperCase ; converts to upper case
 
@@ -244,15 +256,212 @@ ExitConvertALToUpperCase:
 endp ConvertALToUpperCase
 
 CallBackspace:
+	cmp [currentWord], 0
+	jbe GameLoop
+
 	call Backspace
 	jmp GameLoop
 
+CallEnterLine:
+	cmp [currentWord], 5
+	jb GameLoop
+
+	call EnterLine
+	jmp GameLoop
+
+proc EnterLine
+	call CheckLineLetters
+	call RewriteLine
+
+	call CheckIfWon
+	call CheckifLoss
+
+	call ResetLineColor
+	inc [CurrentLine]
+	mov [currentWord], 0
+	ret
+endp EnterLine
+
+proc CheckIfLoss
+	cmp [CurrentLine], 4
+	jae Loss
+
+	ret
+endp CheckIfLoss
+
+Loss:
+	call DisplayHelp
+
+proc CheckIfWon
+	mov bx, 0
+	mov cx, 0
+	CheckIfWonLoop:
+		cmp [LineColor + bx], 'g'
+		jne ContinueCheckIfWon
+
+		inc cx
+
+		ContinueCheckIfWon:
+			inc bx
+			cmp bx, 5
+			jb CheckIfWonLoop
+	
+	cmp cx, 5
+	je Win
+
+	ret
+endp CheckIfWon
+
+Win:
+	call Game
+
+proc CheckLineLetters
+	call GreenCheck
+	call YellowCheck
+
+	ret
+endp CheckLineLetters
+
+proc YellowCheck
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+
+	mov cx, 0
+	YellowCheckLoop:
+		mov bx, cx
+		cmp [LineColor + bx], 'g'
+		je YellowCheckNextLetter
+
+		mov [currentWord], cl
+		call GetCurrentLetter
+
+		mov dx, 0
+		YellowAnswerCheckLoop:
+			mov si, dx
+			mov al, [Answer + si]
+			cmp [LineColor + si], 'g'
+			je ContinueYellowAnswerCheck
+			cmp [bx], al
+			je PutYellow
+
+			ContinueYellowAnswerCheck:
+				inc dx
+				cmp dx, 5
+				jb YellowAnswerCheckLoop
+				jae YellowCheckNextLetter
+		
+		PutYellow:
+			mov bx, cx
+			mov [LineColor + bx], 'y'
+
+		YellowCheckNextLetter:
+			inc cx
+			cmp cx, 5
+			jb YellowCheckLoop
+
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax	
+
+	ret
+endp YellowCheck
+
+proc GreenCheck
+	push ax
+	push bx
+	push cx
+	push si
+
+	mov cx, 0
+	GreenCheckLoop:
+		mov [currentWord], cl
+		call GetCurrentLetter
+
+		mov si, cx
+		mov al, [Answer + si]
+		cmp [bx], al
+		jne LetterIsNotGreen
+
+		mov bx, cx
+		mov [LineColor + bx], 'g'
+
+		LetterIsNotGreen:
+			inc cx
+			cmp cx, 5
+			jb GreenCheckLoop
+	
+	pop si
+	pop cx
+	pop bx
+	pop ax
+
+	ret
+endp GreenCheck
+
+proc ResetLineColor
+	push bx
+	push cx
+
+	mov cx, 5
+	ResetLineColorLoop:
+		mov bx, cx
+		dec bx
+		mov [lineColor + bx], 'w'
+		loop ResetLineColorLoop
+	
+	pop cx
+	pop bx
+
+	ret
+endp ResetLineColor
+
+proc RewriteLine
+	push ax
+	push bx
+	push cx
+	push dx
+
+	mov bx, 0
+	mov [currentWord], 0
+	RewriteLineLoop:
+		mov dl, [LineColor + bx]
+		mov dh, 0
+		mov cx, bx
+		call GetCurrentLetter
+		mov al, [bx]
+		mov bx, cx
+		call WriteLetterOnScreen
+
+		inc bx
+		inc [CurrentWord]
+		cmp bx, 5
+		jb RewriteLineLoop
+	
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+
+	ret
+endp RewriteLine
 
 proc Backspace
-	mov [line0 + currentWord], 0
+	push bx
 
-	mov dx, [LetterEmpty]
+	dec [currentWord]
+	mov bl, [currentWord]
+	mov bh, 0
+	mov [byte line0 + bx], 0
+
+	mov dx, offset LetterEmpty
 	call DisplayDXOnNode
+
+	pop bx
 
 	ret
 endp Backspace
@@ -268,22 +477,30 @@ endp WriteLetter
 
 
 proc WriteLetterOnScreen
+	push bx
+	push cx
 	push dx
 
 	mov [LetterToWrite], al
-	mov [LetterColor], 'g'
-	mov dx, offset Letter
+	mov bl, [currentWord]
+	mov bh, 0
+	mov cl, [LineColor + bx]
+	mov [LetterColor], cl
 
+	mov dx, offset Letter
 	call DisplayDXOnNode
 
 	pop dx
+	pop cx
+	pop bx
 
 	ret
-endp WriteLetter
+endp WriteLetterOnScreen
 
 proc DisplayDXOnNode
 	push ax
 	push bx
+	push dx
 
 	mov al, [currentWord]
 	mov bl, 36
@@ -303,36 +520,44 @@ proc DisplayDXOnNode
 
 	pop dx
 	pop bx
+	pop ax
 
 	ret
 endp DisplayDXOnNode
 
 proc WriteLetterInCode
-	push ax
 	push bx
-	push dx
+	push cx
 
-	mov dl, al
+	call GetCurrentLetter
+	mov [bx], al
 
-	mov bl, al
-	sub bl, 'a'
-
-	mov [line0 + bl], dl
-
-	pop dx
+	pop cx
 	pop bx
-	pop ax
 
 	ret
 endp WriteLetterInCode
+
+proc GetCurrentLetter
+	push ax
+
+	mov bl, [currentWord]
+	mov bh, 0
+	mov al, [CurrentLine]
+	mov ah, 5
+	mul ah
+	add bx, ax
+	add bx, offset line0
+
+	pop ax
+
+	ret
+endp GetCurrentLetter
 
 proc NextLetter
 	inc [currentWord]
 	ret
 endp NextLetter
-
-GoToMenu:
-	call Game
 
 
 
@@ -357,10 +582,14 @@ proc DisplayHelp
 	mov [HeightClick], 32
 	call WaitTillGotClickOnSomePoint
 	cmp [GotClick], 1
-	je GoToMenu
+	je GoToMenuFromHelp
 
 	ret
 endp DisplayHelp
+
+GoToMenuFromHelp:
+	call Game
+
  
 END start
 
