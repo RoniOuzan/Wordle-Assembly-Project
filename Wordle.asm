@@ -515,7 +515,7 @@ proc displayDXOnNode
 	mov al, [currentWord]
 	mov bl, 36
 	mul bl
-	add ax, 16
+	add ax, 72
 	mov [bmpLeft], ax
 
 	mov al, [currentLine]
