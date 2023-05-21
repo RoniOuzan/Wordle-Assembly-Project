@@ -16,7 +16,6 @@ EXIT_BUTTON equ 'images/buttons/Exit.bmp'
 
 LETTER_IMAGE equ 'images/letters/'
  
-BMP_WIDTH = 320
  
 
 DATASEG
@@ -602,4 +601,5 @@ endp displayHelp
 goToMenuFromHelp:
 	call game
 
+EndOfCsLbl:
 END start

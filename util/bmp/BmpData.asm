@@ -1,4 +1,4 @@
-scrLine 	db BMP_WIDTH dup (0)  ; One Color line read buffer
+scrLine 	db 320 dup (0)  ; One Color line read buffer
  
 fileHandle	dw ?
 header 	    db 54 dup(0)
