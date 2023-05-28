@@ -1548,8 +1548,6 @@ extol
 extra
 exude
 exult
-fted
-fa on
 faber
 fable
 faced

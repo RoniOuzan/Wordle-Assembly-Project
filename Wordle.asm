@@ -3,59 +3,34 @@ MODEL small
 
 STACK 0f500h
 
-MENU_BACKGROUND  equ 'images/menus/Menu.bmp'
-HELP_TEXT equ 'images/menus/HelpText.bmp'
-GAME_LAYOUT equ 'images/menus/Game.bmp'
-WIN_BACKGROUND equ 'images/menus/Win.bmp'
-LOSE_BACKGROUND equ 'images/menus/Lose.bmp'
-EXIT_BACKGROUND equ 'images/menus/Exit.bmp'
-
-START_BUTTON equ 'images/buttons/Start.bmp'
-HELP_BUTTON equ 'images/buttons/Help.bmp'
-EXIT_BUTTON equ 'images/buttons/Exit.bmp'
-
-LETTER_IMAGE equ 'images/letters/'
- 
- 
-
 DATASEG
     include 'util/bmp/BmpData.asm'
 	include "util/random/RandData.asm"
-	 
-	color db ?
-	xClick dw ?
-	yClick dw ?
-	xp dw ?
-	yp dw ?
-	squareSize dw ?
-	 
+	include "util/mouse/MoseData.asm"
+
 	bmpLeft dw ?
 	bmpTop dw ?
 	bmpColSize dw ?
 	bmpRowSize dw ?
-	
-	widthClick dw ?
-	heightClick dw ?
-	gotClick db ?
 
 ;----------------------------------------------------
 
-	fileMenu db MENU_BACKGROUND, 0
-	fileHelpText db HELP_TEXT, 0
-	fileGameLayout db GAME_LAYOUT, 0
-	fileWin db WIN_BACKGROUND, 0
-	fileLose db LOSE_BACKGROUND, 0
-	fileExit db EXIT_BACKGROUND, 0
+	fileMenu db 'images/menus/Menu.bmp', 0
+	fileHelpText db  'images/menus/HelpText.bmp', 0
+	fileGameLayout db  'images/menus/Game.bmp', 0
+	fileWin db 'images/menus/Win.bmp', 0
+	fileLose db 'images/menus/Lose.bmp', 0
+	fileExit db 'images/menus/Exit.bmp', 0
 
-	fileStartButton db START_BUTTON, 0
-	fileHelpButton db HELP_BUTTON, 0
-	fileExitButton db EXIT_BUTTON, 0
+	fileStartButton db 'images/buttons/Start.bmp', 0
+	fileHelpButton db 'images/buttons/Help.bmp', 0
+	fileExitButton db 'images/buttons/Exit.bmp', 0
 
-	letter db LETTER_IMAGE
+	letter db 'images/letters/'
 	letterToWrite db 'a', '_'
 	letterColor db 'g.bmp', 0
 
-	letterEmpty db LETTER_IMAGE, '___.bmp', 0
+	letterEmpty db 'images/letters/___.bmp', 0
 
 ;----------------------------------------------------
 
@@ -73,31 +48,30 @@ DATASEG
 	answer db 'abcde'
 
 	variable dw ?
-	
-	 
+
+
 CODESEG
- 
+
 	include "util/bmp/BmpCode.asm"
 	include "util/mouse/MoseCode.asm" ; It's mose and not mouse because 8 let limit and not because I am stupid
 	include "util/random/RandCode.asm"
- 
+
 start:
 	mov ax, @data
 	mov ds, ax
-	
+
 	call setGraphic
- 
+
 	call game
-	
-		
+
 exit:
 	mov dx, offset BB
 	mov ah,9
 	;int 21h
-	
+
 	mov ah,0
 	int 16h
-	
+
 	mov ax,2
 	int 10h
 
@@ -153,40 +127,38 @@ proc displayButtons
 	mov [bmpColSize], 128
 	mov [bmpRowSize], 32
 	call openShowBmp
-
 	ret
 endp displayButtons
 
 proc waitForStart
+	mov cx, 200
+    call waitMilliseconds
+
 	menuLoop:
-		; Start
+		call readMouse
+
 		mov [xClick], 96
 		mov [yClick], 80
 		mov [widthClick], 128
 		mov [heightClick], 32
-		call waitTillGotClickOnSomePointAsync
-		
-		cmp [GotClick], 1
+		call ifMouseInPose
+		cmp [mouseInPos], 1
 		je startButtonClicked
-		
-		; Help
+
 		mov [xClick], 96
 		mov [yClick], 120
 		mov [widthClick], 128
 		mov [heightClick], 32
-		call waitTillGotClickOnSomePointAsync
-		
-		cmp [gotClick], 1
+		call ifMouseInPose
+		cmp [mouseInPos], 1
 		je helpButtonClicked
 
-		; Exit
 		mov [xClick], 96
 		mov [yClick], 160
 		mov [widthClick], 128
 		mov [heightClick], 32
-		call waitTillGotClickOnSomePointAsync
-		
-		cmp [gotClick], 1
+		call ifMouseInPose
+		cmp [mouseInPos], 1
 		je exitButtonClicked
 
 		jmp menuLoop
@@ -197,7 +169,7 @@ startButtonClicked:
 	call startGame
 
 helpButtonClicked:
-	call DisplayHelp
+	call displayHelp
 
 exitButtonClicked:
 	mov dx, offset fileExit
@@ -245,7 +217,7 @@ proc startGame
 		ja gameLoop
 
 		call writeLetter ; if the key is letter: write it on the screen
-	
+
 		jmp gameLoop
 
 	ret
@@ -295,13 +267,29 @@ proc checkIfLost
 	ret
 endp checkIfLost
 
-lose:
+proc lose
 	mov dx, offset fileLose
 	mov [bmpLeft],0
 	mov [bmpTop],0
 	mov [bmpColSize], 320
 	mov [bmpRowSize], 200
 	call openShowBmp
+	
+	mov bx, 0
+	loseLoop:
+		mov [currentWord], bl
+		mov [currentLine], 2
+		mov [letterColor], 'g'
+		mov al, [answer + bx]
+		mov [letterToWrite], al
+		mov dx, offset Letter
+		call displayDXOnNode
+
+		inc bx
+		cmp bx, 5
+		jb loseLoop
+	ret
+endp lose
 
 proc checkIfWon
 	mov bx, 0
@@ -315,7 +303,7 @@ proc checkIfWon
 			inc bx
 			cmp bx, 5
 			jb checkIfWonLoop
-	
+
 	cmp cx, 5
 	je win
 
@@ -359,7 +347,7 @@ proc greenCheck
 			inc cx
 			cmp cx, 5
 			jb greenCheckLoop
-	
+
 	pop si
 	pop cx
 	pop bx
@@ -398,7 +386,7 @@ proc yellowCheck
 				cmp dx, 5
 				jb yellowAnswerCheckLoop
 				jae yellowCheckNextLetter
-		
+
 		putYellow:
 			mov bx, cx
 			mov [lineColor + bx], 'y'
@@ -412,7 +400,7 @@ proc yellowCheck
 	pop dx
 	pop cx
 	pop bx
-	pop ax	
+	pop ax
 
 	ret
 endp yellowCheck
@@ -427,7 +415,7 @@ proc resetlineColor
 		dec bx
 		mov [lineColor + bx], 'w'
 		loop resetlineColorLoop
-	
+
 	pop cx
 	pop bx
 
@@ -455,7 +443,7 @@ proc rewriteLine
 		inc [currentWord]
 		cmp bx, 5
 		jb rewriteLineLoop
-	
+
 	pop dx
 	pop cx
 	pop bx
@@ -576,7 +564,7 @@ proc displayHelp
 	mov dx, offset fileHelpText
 	mov [bmpLeft],0
 	mov [bmpTop],0
-	mov [bmpColSize], 320	
+	mov [bmpColSize], 320
 	mov [bmpRowSize], 200
 	call openShowBmp
 
@@ -587,13 +575,18 @@ proc displayHelp
 	mov [bmpRowSize], 32
 	call openShowBmp
 
-	mov [xClick], 96
-	mov [yClick], 164
-	mov [widthClick], 128
-	mov [heightClick], 32
-	call waitTillGotClickOnSomePoint
-	cmp [gotClick], 1
-	je goToMenuFromHelp
+	helpLoop:
+		call readMouse
+
+		mov [xClick], 96
+		mov [yClick], 164
+		mov [widthClick], 128
+		mov [heightClick], 32
+		call ifMouseInPose
+		cmp [mouseInPos], 1
+		je goToMenuFromHelp
+
+		jmp helpLoop
 
 	ret
 endp displayHelp

@@ -1,9 +1,9 @@
 import random
 import os
 
-flag_path = "./util/words/FLAG.txt"
-answers_path = "./util/words/Answers.txt"
-rand_word_path = "./util/words/Word.txt"
+flag_path = "C:/Wordle/util/words/FLAG.txt"
+answers_path = "C:/Wordle/util/words/Answers.txt"
+rand_word_path = "C:/Wordle/util/words/Word.txt"
 words = []
 
 with open(answers_path) as f:

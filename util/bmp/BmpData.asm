@@ -11,3 +11,5 @@ bmpFileErrorMsg    	db 'Error At Opening Bmp File', 0dh, 0ah,'$'
 errorFile           db 0
 BB db "BB..",'$'
 ; array for mouse int 33 ax=09 (not a must) 64 bytes
+
+squareSize dw ?

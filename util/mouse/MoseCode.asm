@@ -1,5 +1,7 @@
 ; Sync wait for mouse click
 proc waitTillgotClickOnSomePoint
+	mov [gotClick], 0
+
 	push si
 	push ax
 	push bx
@@ -35,7 +37,7 @@ waitTillPressOnPoint:
 	cmp si , [xClick]
 	jl waitTillPressOnPoint
 	mov si, cx 
-	sub si, [WidthClick]
+	sub si, [widthClick]
 	cmp si , [xClick]
 	jg waitTillPressOnPoint
 	
@@ -102,7 +104,7 @@ waitTillPressOnPointAsync:
 	ja clickForExit
 	
 	mov si, [xClick]
-	add si, [WidthClick]
+	add si, [widthClick]
 	cmp cx, si
 	ja jumpMouseClickAsyncCheck
 	cmp cx, [xClick]
@@ -143,3 +145,139 @@ clickForExitAsync:
 	pop si
 	ret
 endp waitTillgotClickOnSomePointAsync
+
+proc readMouse
+	push ax
+	push bx
+	push cx
+	push dx
+	
+	mov [mouseInPos], 0
+	
+	mov ax,1
+	int 33h
+
+	mov bx, 0
+	mov ax,3h
+	int 33h
+	
+	mov [mouseClickInfo], bx
+	shr cx, 1
+	mov [mouseXPos], cx
+	mov [mouseYPos], dx
+
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+endp readMouse
+
+proc ifMouseInPose
+	push ax
+	
+	mov [mouseInPos], 0
+	
+	cmp [mouseClickInfo], 1
+	jne notInPose
+
+	mov ax, [xClick]
+	add ax, [widthClick]
+	cmp [mouseXPos], ax 
+	ja notInPose
+	mov si, [xClick]
+	cmp [mouseXPos], si
+	jb notInPose
+	
+	mov si, [yClick]
+	add si, [heightClick]
+	cmp [mouseYPos], si 
+	ja notInPose
+	mov si, [yClick]
+	cmp [mouseYPos], si
+	jb notInPose
+	
+	mov [mouseInPos], 1
+	
+	mov ax,0
+	int 33h
+	
+	jmp endProc
+	
+notInPose:
+	mov [mouseInPos], 0
+	
+endProc:
+	pop ax
+
+	ret
+endp IfMouseInPose
+
+;================================================
+; Description - Write on screen the value of ax (decimal)
+;               the practice :  
+;				Divide AX by 10 and put the Mod on stack 
+;               Repeat Until AX smaller than 10 then print AX (MSB) 
+;           	then pop from the stack all what we kept there and show it. 
+; INPUT: AX
+; OUTPUT: Screen 
+; Register Usage: AX  
+;================================================
+proc ShowAxDecimal
+       push ax
+	   push bx
+	   push cx
+	   push dx
+	   
+	   ; check if negative
+	   test ax,08000h
+	   jz PositiveAx
+			
+	   ;  put '-' on the screen
+	   push ax
+	   mov dl,'-'
+	   mov ah,2
+	   int 21h
+	   pop ax
+
+	   neg ax ; make it positive
+PositiveAx:
+       mov cx,0   ; will count how many time we did push 
+       mov bx,10  ; the divider
+   
+put_mode_to_stack:
+       xor dx,dx
+       div bx
+       add dl,30h
+	   ; dl is the current LSB digit 
+	   ; we cant push only dl so we push all dx
+       push dx    
+       inc cx
+       cmp ax,9   ; check if it is the last time to div
+       jg put_mode_to_stack
+
+	   cmp ax,0
+	   jz pop_next  ; jump if ax was totally 0
+       add al,30h  
+	   mov dl, al    
+  	   mov ah, 2h
+	   int 21h        ; show first digit MSB
+	       
+pop_next: 
+       pop ax    ; remove all rest LIFO (reverse) (MSB to LSB)
+	   mov dl, al
+       mov ah, 2h
+	   int 21h        ; show all rest digits
+       loop pop_next
+		
+	   mov dl, ','
+       mov ah, 2h
+	   int 21h
+   
+	   pop dx
+	   pop cx
+	   pop bx
+	   pop ax
+	   
+	   ret
+endp ShowAxDecimal 

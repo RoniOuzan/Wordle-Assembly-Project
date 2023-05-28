@@ -172,38 +172,6 @@ nextVerticalLine:
 	pop cx
 	ret
 endp rect
-
-proc drawSquare
-	push si
-	push ax
-	push cx
-	push dx
-	
-	mov al,[color]
-	mov si,[squareSize]  ; line Length
- 	mov cx,[xp]
-	mov dx,[yp]
-	call drawHorizontalLine
-
-	call drawVerticalLine	 
-	
-	add dx ,si
-	dec dx
-	call drawHorizontalLine
-	
-	sub  dx ,si
-	inc dx
-	add cx,si
-	dec cx
-	call drawVerticalLine
-	
-	pop dx
-	pop cx
-	pop ax
-	pop si
-	 
-	ret
-endp drawSquare
    
 proc setGraphic
 	mov ax,13h   ; 320 X 200 
