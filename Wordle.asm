@@ -193,8 +193,8 @@ proc enterLine
 	call checkLineLetters
 	call rewriteLine
 
-	call checkIfWon
 	call checkifLost
+	call checkIfWon
 
 	call resetlineColor
 	inc [currentLine]
