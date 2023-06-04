@@ -38,7 +38,7 @@ proc generateRandomWord
 
     mov bx, 0
     mov dx, 14091
-    call RandomByCsWord
+    call randomByCsWord
 
     mov dx, 6
     mul dx
@@ -77,7 +77,7 @@ endp generateRandomWord
 ; 	for example - if you call to this proc 50 times at the same second  - 
 ; 	Make sure the cs size is 50 bytes or more 
 ; 	(if not, make it to be more) 
-proc RandomByCsWord
+proc randomByCsWord
     push es
 	push si
 	push di
@@ -94,7 +94,7 @@ proc RandomByCsWord
 	push bx
 
 	mov di, [word RndCurrentPos]
-	call MakeMaskWord ; will put in si the right mask according the delta (bh) (example for 28 will put 31)
+	call makeMaskWord ; will put in si the right mask according the delta (bh) (example for 28 will put 31)
 
 @@RandLoop: ;  generate random number 
 	mov bx, [es:06ch] ; read timer counter
@@ -124,9 +124,9 @@ proc RandomByCsWord
 	pop si
 	pop es
 	ret
-endp RandomByCsWord
+endp randomByCsWord
 
-Proc MakeMaskWord    
+proc makeMaskWord    
     push dx
 
 	mov si,1
@@ -144,4 +144,4 @@ Proc MakeMaskWord
 @@EndProc:
     pop dx
 	ret
-endp  MakeMaskWord
+endp  makeMaskWord

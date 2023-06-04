@@ -45,7 +45,7 @@ DATASEG
 
 	lineColor db 'w', 'w', 'w', 'w', 'w'
 
-	answer db 'abcde'
+	answer db 'aebdf'
 
 	variable dw ?
 
@@ -62,7 +62,7 @@ start:
 
 	call setGraphic
 
-	call game
+	call menu
 
 exit:
 	mov dx, offset BB
@@ -78,16 +78,18 @@ exit:
 	mov ax, 4c00h
 	int 21h
 
-proc game
+proc menu
 	call reset
 
 	displayBackground fileMenu
-	call displayButtons
+	displayImage fileStartButton, 96, 80, 128, 32
+	displayImage fileHelpButton, 96, 120, 128, 32
+	displayImage fileExitButton, 96, 160, 128, 32
 
-	call waitForStart
+	call waitForButton
 
 	ret
-endp game
+endp menu
 
 proc reset
 	mov [currentLine], 0
@@ -96,14 +98,7 @@ proc reset
 	ret
 endp reset
 
-proc displayButtons
-	displayImage fileStartButton, 96, 80, 128, 32
-	displayImage fileHelpButton, 96, 120, 128, 32
-	displayImage fileExitButton, 96, 160, 128, 32
-	ret
-endp displayButtons
-
-proc waitForStart
+proc waitForButton
     waitMilliseconds 200
 
 	menuLoop:
@@ -115,7 +110,7 @@ proc waitForStart
 
 		jmp menuLoop
 	ret
-endp waitForStart
+endp waitForButton
 
 startButtonClicked:
 	call startGame
@@ -130,12 +125,12 @@ exitButtonClicked:
 		jmp whileExit
 
 goToMenuFromEsc:
-	call game
+	call menu
 
 proc startGame
 	displayBackground fileGameLayout
 
-	; call generateRandomWord
+	call generateRandomWord
 
 	gameLoop:
 		mov ah, 0h ; Reads input from keyboard
@@ -465,12 +460,10 @@ endp displayDXOnNode
 
 proc writeLetterInCode
 	push bx
-	push cx
 
 	call getCurrentLetter
 	mov [bx], al
 
-	pop cx
 	pop bx
 
 	ret
@@ -511,7 +504,7 @@ proc displayHelp
 endp displayHelp
 
 goToMenuFromHelp:
-	call game
+	call menu
 
 EndOfCsLbl:
 END start
