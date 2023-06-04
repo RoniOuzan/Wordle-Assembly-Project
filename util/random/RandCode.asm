@@ -1,24 +1,31 @@
-proc waitMilliseconds
-    push cx        ; Save the original value of CX
+macro waitMilliseconds a
+	mov cx, a
+	call wait_milliseconds
+endm
 
-    mov dx, cx     ; Move the number of milliseconds to DX
-    mov cx, 10     ; Set the timer frequency to 1 ms
+proc wait_milliseconds
+	push ax
+    push cx
+	push dx
 
-    ; Calculate the number of iterations needed to wait the desired time
-    mul cx         ; Multiply DX by CX
+    mov dx, cx
+    mov cx, 10
 
-    ; Loop to wait for the desired time
+    mul cx
+
     loop_wait:
-        mov cx, dx ; Restore the original value of CX
-        mov ah, 86h ; Function 86h - Get System Time
-        int 15h    ; Call interrupt 15h to get the current system time
-        sub dx, cx ; Subtract the original value of CX from the current time
-        cmp dx, ax ; Compare with the number of iterations needed
-        jb loop_wait ; Jump back if the desired time has not elapsed
+        mov cx, dx
+        mov ah, 86h
+        int 15h
+        sub dx, cx
+        cmp dx, ax
+        jb loop_wait
 
-    pop cx ; Restore the original value of CX
-    ret
-endp waitMilliseconds
+	pop dx
+    pop cx
+	pop ax
+	ret
+endp wait_milliseconds
 
 proc generateRandomWord
 

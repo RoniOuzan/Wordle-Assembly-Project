@@ -1,3 +1,13 @@
+macro mouseClick l, x, y, w, h
+	mov [xClick], x
+	mov [yClick], y
+	mov [widthClick], w
+	mov [heightClick], h
+	call ifMouseInPose
+	cmp [mouseInPos], 1
+	je l
+endm
+
 ; Sync wait for mouse click
 proc waitTillgotClickOnSomePoint
 	mov [gotClick], 0

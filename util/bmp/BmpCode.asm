@@ -1,3 +1,16 @@
+macro displayImage i, x, y, w, h
+	mov dx, offset i
+	mov [bmpLeft],x
+	mov [bmpTop],y
+	mov [bmpColSize], w
+	mov [bmpRowSize], h
+	call openShowBmp
+endm
+
+macro displayBackground i
+	displayImage i, 0, 0, 320, 200
+endm
+
 proc openShowBmp near
 	
 	 
@@ -240,4 +253,3 @@ proc showBMP
 	pop cx
 	ret
 endp showBMP 
-

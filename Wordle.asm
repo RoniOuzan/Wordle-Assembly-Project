@@ -81,7 +81,7 @@ exit:
 proc game
 	call reset
 
-	call displayBackground
+	displayBackground fileMenu
 	call displayButtons
 
 	call waitForStart
@@ -96,70 +96,22 @@ proc reset
 	ret
 endp reset
 
-proc displayBackground
-	mov dx, offset fileMenu
-	mov [bmpLeft],0
-	mov [bmpTop],0
-	mov [bmpColSize], 320
-	mov [bmpRowSize], 200
-	call openShowBmp
-	ret
-endp displayBackground
-
 proc displayButtons
-	mov dx, offset fileStartButton
-	mov [bmpLeft],96
-	mov [bmpTop],80
-	mov [bmpColSize], 128
-	mov [bmpRowSize], 32
-	call openShowBmp
-
-	mov dx, offset fileHelpButton
-	mov [bmpLeft],96
-	mov [bmpTop],120
-	mov [bmpColSize], 128
-	mov [bmpRowSize], 32
-	call openShowBmp
-
-	mov dx, offset fileExitButton
-	mov [bmpLeft],96
-	mov [bmpTop],160
-	mov [bmpColSize], 128
-	mov [bmpRowSize], 32
-	call openShowBmp
+	displayImage fileStartButton, 96, 80, 128, 32
+	displayImage fileHelpButton, 96, 120, 128, 32
+	displayImage fileExitButton, 96, 160, 128, 32
 	ret
 endp displayButtons
 
 proc waitForStart
-	mov cx, 200
-    call waitMilliseconds
+    waitMilliseconds 200
 
 	menuLoop:
 		call readMouse
 
-		mov [xClick], 96
-		mov [yClick], 80
-		mov [widthClick], 128
-		mov [heightClick], 32
-		call ifMouseInPose
-		cmp [mouseInPos], 1
-		je startButtonClicked
-
-		mov [xClick], 96
-		mov [yClick], 120
-		mov [widthClick], 128
-		mov [heightClick], 32
-		call ifMouseInPose
-		cmp [mouseInPos], 1
-		je helpButtonClicked
-
-		mov [xClick], 96
-		mov [yClick], 160
-		mov [widthClick], 128
-		mov [heightClick], 32
-		call ifMouseInPose
-		cmp [mouseInPos], 1
-		je exitButtonClicked
+		mouseClick startButtonClicked, 96, 80, 128, 32
+		mouseClick helpButtonClicked, 96, 120, 128, 32
+		mouseClick exitButtonClicked, 96, 160, 128, 32
 
 		jmp menuLoop
 	ret
@@ -172,12 +124,7 @@ helpButtonClicked:
 	call displayHelp
 
 exitButtonClicked:
-	mov dx, offset fileExit
-	mov [bmpLeft],0
-	mov [bmpTop],0
-	mov [bmpColSize], 320
-	mov [bmpRowSize], 200
-	call openShowBmp
+	displayBackground fileExit
 
 	whileExit:
 		jmp whileExit
@@ -186,14 +133,9 @@ goToMenuFromEsc:
 	call game
 
 proc startGame
-	mov dx, offset fileGameLayout
-	mov [bmpLeft],0
-	mov [bmpTop],0
-	mov [bmpColSize], 320
-	mov [bmpRowSize], 200
-	call openShowBmp
+	displayBackground fileGameLayout
 
-	call generateRandomWord
+	; call generateRandomWord
 
 	gameLoop:
 		mov ah, 0h ; Reads input from keyboard
@@ -311,12 +253,7 @@ proc checkIfWon
 endp checkIfWon
 
 win:
-	mov dx, offset fileWin
-	mov [bmpLeft],0
-	mov [bmpTop],0
-	mov [bmpColSize], 320
-	mov [bmpRowSize], 200
-	call openShowBmp
+	displayBackground fileWin
 
 proc checkLineLetters
 	call greenCheck
@@ -439,6 +376,8 @@ proc rewriteLine
 		mov bx, cx
 		call writeLetterOnScreen
 
+		waitMilliseconds 500
+
 		inc bx
 		inc [currentWord]
 		cmp bx, 5
@@ -468,14 +407,12 @@ proc backspace
 	ret
 endp backspace
 
-
 proc writeLetter
 	call writeLetterOnScreen
 	call writeLetterInCode
 	call nextLetter
 	ret
 endp writeLetter
-
 
 proc writeLetterOnScreen
 	push bx
@@ -561,30 +498,12 @@ proc nextLetter
 endp nextLetter
 
 proc displayHelp
-	mov dx, offset fileHelpText
-	mov [bmpLeft],0
-	mov [bmpTop],0
-	mov [bmpColSize], 320
-	mov [bmpRowSize], 200
-	call openShowBmp
-
-	mov dx, offset fileExitButton
-	mov [bmpLeft],96
-	mov [bmpTop],164
-	mov [bmpColSize], 128
-	mov [bmpRowSize], 32
-	call openShowBmp
+	displayBackground fileHelpText
+	displayImage fileExitButton, 96, 164, 128, 32
 
 	helpLoop:
 		call readMouse
-
-		mov [xClick], 96
-		mov [yClick], 164
-		mov [widthClick], 128
-		mov [heightClick], 32
-		call ifMouseInPose
-		cmp [mouseInPos], 1
-		je goToMenuFromHelp
+		mouseClick goToMenuFromHelp, 96, 164, 128, 32
 
 		jmp helpLoop
 
