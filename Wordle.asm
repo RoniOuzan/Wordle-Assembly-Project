@@ -45,7 +45,7 @@ DATASEG
 
 	lineColor db 'w', 'w', 'w', 'w', 'w'
 
-	answer db 'aebdf'
+	answer db 'ofirr'
 
 	variable dw ?
 
